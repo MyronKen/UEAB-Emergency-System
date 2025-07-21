@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Campus Emergency System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(238, 90, 36, 0.3);
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .admin-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-indicator {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-online {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.15),
+                0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .card-subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .config-section {
+            margin-bottom: 2rem;
+        }
+
+        .config-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .config-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .config-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #059669;
+        }
+
+        .config-content {
+            background: rgba(249, 250, 251, 0.8);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(209, 213, 219, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid rgba(209, 213, 219, 0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(107, 114, 128, 0.2);
+            color: #4b5563;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+        }
+
+        .network-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            border: 1px solid rgba(209, 213, 219, 0.2);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .emergency-badge {
+            position: fixed;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            background: #ff4757;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .emergency-badge:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 8px 24px rgba(255, 71, 87, 0.6);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.05); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem 0;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-content {
+                padding: 0 1rem;
+            }
+
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+
+            .user-info span {
+                display: none;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-title {
+                font-size: 2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .status-indicators {
+                flex-wrap: wrap;
+            }
+
+            .network-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 1rem;
+            }
+
+            .dashboard-card {
+                padding: 1.5rem;
+            }
+
+            .dashboard-title {
+                font-size: 1.75rem;
+            }
+
+            .network-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <header class="navbar">
+        <div class="navbar-content">
+            <a class="navbar-brand" href="#">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                Campus Emergency System
+            </a>
+            <div class="navbar-user">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span id="userName">Admin User</span>
+                    <div class="admin-badge">
+                        <i class="fas fa-crown"></i>
+                        Admin
+                    </div>
+                </div>
+                <a href="#" class="btn-logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Log Out
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Admin Dashboard</h1>
+            <p class="dashboard-subtitle">Manage campus emergency systems, network configuration, and security settings</p>
+            
+            <div class="status-indicators">
+                <div class="status-indicator status-online">
+                    <i class="fas fa-circle" style="color: #10b981;"></i>
+                    System Online
+                </div>
+                <div class="status-indicator status-online">
+                    <i class="fas fa-wifi" style="color: #10b981;"></i>
+                    Network Active
+                </div>
+                <div class="status-indicator status-warning">
+                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                    2 Alerts
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div>
+                        <h3 class="card-title">Network Configuration</h3>
+                        <p class="card-subtitle">SD-WAN, VLAN, and network settings</p>
+                    </div>
+                </div>
+
+                <div class="network-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Active Nodes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">99.8%</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">12ms</div>
+                        <div class="stat-label">Latency</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-header">
+                        <h4 class="config-title">SD-WAN Configuration</h4>
+                        <div class="config-status">
+                            <i class="fas fa-check-circle"></i>
+                            Active
+                        </div>
+                    </div>
+                    <div class="config-content">
+                        <div class="form-group">
+                            <label class="form-label">Primary Gateway</label>
+                            <input type="text" class="form-control" value="192.168.1.1" placeholder="Enter gateway IP">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Bandwidth (Mbps)</label>
+                                <input type="number" class="form-control" value="1000" placeholder="1000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Priority</label>
+                                <select class="form-control">
+                                    <option value="high">High</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Configuration
+                            </button>
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-undo"></i>
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-header">
+                        <h4 class="config-title">VLAN Settings</h4>
+                        <div class="config-status">
+                            <i class="fas fa-check-circle"></i>
+                            Configured
+                        </div>
+                    </div>
+                    <div class="config-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">VLAN ID</label>
+                                <input type="number" class="form-control" value="100" placeholder="100">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Subnet</label>
+                                <input type="text" class="form-control" value="192.168.100.0/24" placeholder="192.168.100.0/24">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-primary">
+                                <i class="fas fa-plus"></i>
+                                Add VLAN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="card-title">Security & Access</h3>
+                        <p class="card-subtitle">User management and security settings</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    All security systems are operational
+                </div>
+
+                <div class="config-section">
+                    <div class="config-header">
+                        <h4 class="config-title">Emergency Access</h4>
+                    </div>
+                    <div class="config-content">
+                        <div class="form-group">
+                            <label class="form-label">Emergency Override Code</label>
+                            <input type="password" class="form-control" placeholder="Enter new override code">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-danger">
+                                <i class="fas fa-key"></i>
+                                Update Emergency Code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-header">
+                        <h4 class="config-title">System Backup</h4>
+                    </div>
+                    <div class="config-content">
+                        <div class="form-group">
+                            <label class="form-label">Last Backup</label>
+                            <input type="text" class="form-control" value="2025-07-15 09:30 AM" readonly>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-primary">
+                                <i class="fas fa-download"></i>
+                                Create Backup
+                            </button>
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-upload"></i>
+                                Restore
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div>
+                        <h3 class="card-title">Alert Management</h3>
+                        <p class="card-subtitle">Emergency alerts and notifications</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    2 active alerts require attention
+                </div>
+
+                <div class="config-section">
+                    <div class="config-header">
+                        <h4 class="config-title">Broadcast Alert</h4>
+                    </div>
+                    <div class="config-content">
+                        <div class="form-group">
+                            <label class="form-label">Alert Type</label>
+                            <select class="form-control">
+                                <option value="emergency">Emergency</option>
+                                <option value="warning">Warning</option>
+                                <option value="info">Information</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" rows="3" placeholder="Enter alert message..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-danger">
+                                <i class="fas fa-broadcast-tower"></i>
+                                Send Alert
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <h3 class="card-title">System Analytics</h3>
+                        <p class="card-subtitle">Performance metrics and usage</p>
+                    </div>
+                </div>
+
+                <div class="network-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">1,247</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">15</div>
+                        <div class="stat-label">Alerts Today</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">98.5%</div>
+                        <div class="stat-label">Response Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">2.3s</div>
+                        <div class="stat-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-content">
+                        <div class="form-group">
+                            <button class="btn btn-primary">
+                                <i class="fas fa-download"></i>
+                                Export Report
+                            </button>
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-chart-bar"></i>
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="emergency-badge pulse" title="Emergency Hotline">
+        <i class="fas fa-phone"></i>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <span>&copy; 2025 Campus Emergency System • Built with care for your safety</span>
+        </div>
+    </footer>
+
+    <script src="scripts/dashboard.js" defer></script>
+</body>
+</html>

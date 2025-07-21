@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Bcrypt
+APScheduler
+mysqlclient
+twilio
+mysql-connector-python
+Flask-Cors

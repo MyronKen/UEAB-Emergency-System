@@ -1,0 +1,17 @@
+.panic-button {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #dc3545; /* Bootstrap red */
+    color: white;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+.panic-button:hover {
+    background-color: #c82333; /* Darker red on hover */
+}

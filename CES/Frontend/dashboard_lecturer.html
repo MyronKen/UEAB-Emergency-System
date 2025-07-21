@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Dashboard - Campus Emergency System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://sdk.twilio.com/js/voice/v2.11.1/twilio.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(238, 90, 36, 0.3);
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .main-container {
+            flex: 1;
+            padding: 2rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(59, 130, 246, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.75rem 1.25rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.15),
+                0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #374151;
+            margin: 0;
+        }
+
+        .wellness-check {
+            grid-column: 1 / -1;
+        }
+
+        .wellness-icon {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .wellness-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .wellness-text {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .wellness-message {
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .wellness-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #059669;
+            font-weight: 500;
+        }
+
+        .check-in-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .check-in-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .panic-section {
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        .panic-button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .panic-button {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #ff4757, #ff3742);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 8px 24px rgba(255, 71, 87, 0.4),
+                0 0 0 0 rgba(255, 71, 87, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: pulse-ring 2s infinite;
+        }
+
+        .panic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 
+                0 12px 32px rgba(255, 71, 87, 0.5),
+                0 0 0 0 rgba(255, 71, 87, 0.7);
+        }
+
+        .panic-button:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 
+                    0 8px 24px rgba(255, 71, 87, 0.4),
+                    0 0 0 0 rgba(255, 71, 87, 0.7);
+            }
+            70% {
+                box-shadow: 
+                    0 8px 24px rgba(255, 71, 87, 0.4),
+                    0 0 0 10px rgba(255, 71, 87, 0);
+            }
+            100% {
+                box-shadow: 
+                    0 8px 24px rgba(255, 71, 87, 0.4),
+                    0 0 0 0 rgba(255, 71, 87, 0);
+            }
+        }
+
+        .panic-warning {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.875rem;
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 71, 87, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .action-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .emergency-contacts .action-icon {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .campus-map .action-icon {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .safety-tips .action-icon {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .report-incident .action-icon {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .emergency-badge {
+            position: fixed;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            background: #ff4757;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .emergency-badge:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 8px 24px rgba(255, 71, 87, 0.6);
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-content {
+                padding: 0 1rem;
+            }
+
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+
+            .logo-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .dashboard-title {
+                font-size: 2rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .wellness-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .panic-button {
+                width: 120px;
+                height: 120px;
+                font-size: 1rem;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .emergency-badge {
+                right: 0.75rem;
+                padding: 0.625rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .dashboard-title {
+                font-size: 1.75rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .panic-button {
+                width: 100px;
+                height: 100px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <header class="navbar">
+        <div class="navbar-content">
+            <a class="navbar-brand" href="index.html">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                Campus Emergency System
+            </a>
+            <div class="navbar-user">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">JS</div>
+                    <span id="userName">John Smith</span>
+                </div>
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Log Out
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Student Dashboard</h1>
+            <p class="dashboard-subtitle">Stay connected and stay safe on campus</p>
+            <div class="user-badge">
+                <i class="fas fa-graduation-cap"></i>
+                Student Access
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card wellness-check">
+                <div class="card-header">
+                    <div class="card-icon wellness-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3 class="card-title">Wellness Check-In</h3>
+                </div>
+                <div class="wellness-content">
+                    <div class="wellness-text">
+                        <p class="wellness-message">Reminder: Check in to confirm you're safe and help us ensure campus-wide safety.</p>
+                        <div class="wellness-status">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Last check-in: Today at 9:30 AM</span>
+                        </div>
+                    </div>
+                    <button class="check-in-btn" id="checkInBtn">
+                        <i class="fas fa-check"></i> Check In Now
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panic-section">
+            <div class="panic-button-container">
+                <button class="panic-button" id="panicBtn">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <br>
+                    Emergency
+                </button>
+                <div class="panic-warning">
+                    <i class="fas fa-info-circle"></i>
+                    Press only in case of real emergency. This will immediately alert campus security and emergency responders.
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <div class="action-card emergency-contacts">
+                <div class="action-icon">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <h4 class="action-title">Emergency Contacts</h4>
+                <p class="action-description">Quick access to campus security, medical services, and emergency hotlines</p>
+            </div>
+
+            <div class="action-card campus-map">
+                <div class="action-icon">
+                    <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <h4 class="action-title">Campus Map</h4>
+                <p class="action-description">Interactive map with emergency exits, safe zones, and rally points</p>
+            </div>
+
+            <div class="action-card safety-tips">
+                <div class="action-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <h4 class="action-title">Safety Tips</h4>
+                <p class="action-description">Essential safety guidelines and emergency procedures for students</p>
+            </div>
+
+            <div class="action-card report-incident">
+                <div class="action-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h4 class="action-title">Report Incident</h4>
+                <p class="action-description">Report non-emergency incidents or safety concerns anonymously</p>
+            </div>
+        </div>
+    </main>
+
+    <div class="emergency-badge" title="Emergency Hotline">
+        <i class="fas fa-phone"></i>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <span>&copy; 2025 Campus Emergency System • Built with care for your safety</span>
+        </div>
+    </footer>
+
+    <script src="scripts/dashboard.js" defer></script>
+</body>
+</html>
+<script src="scripts/panic.js" defer></script>
+<script src="scripts/voip.js" defer></script>
